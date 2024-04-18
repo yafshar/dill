@@ -69,7 +69,6 @@ TypeType = type # 'new-style' classes #XXX: unregistered
 XRangeType = range
 from types import MappingProxyType as DictProxyType, new_class
 from pickle import DEFAULT_PROTOCOL, HIGHEST_PROTOCOL, PickleError, PicklingError, UnpicklingError
-import __main__ as _main_module
 import marshal
 import gc
 # import zlib
@@ -349,6 +348,7 @@ class Pickler(StockPickler):
     from .settings import settings
 
     def __init__(self, file, *args, **kwds):
+        import __main__ as _main_module
         settings = Pickler.settings
         _byref = kwds.pop('byref', None)
        #_strictio = kwds.pop('strictio', None)
@@ -434,6 +434,7 @@ class Unpickler(StockUnpickler):
         return StockUnpickler.find_class(self, module, name)
 
     def __init__(self, *args, **kwds):
+        import __main__ as _main_module
         settings = Pickler.settings
         _ignore = kwds.pop('ignore', None)
         StockUnpickler.__init__(self, *args, **kwds)
@@ -442,7 +443,7 @@ class Unpickler(StockUnpickler):
 
     def load(self): #NOTE: if settings change, need to update attributes
         obj = StockUnpickler.load(self)
-        if type(obj).__module__ == getattr(_main_module, '__name__', '__main__'):
+        if type(obj).__module__ == getattr(self._main, '__name__', '__main__'):
             if not self._ignore:
                 # point obj class to main
                 try: obj.__class__ = getattr(self._main, type(obj).__name__)
@@ -1194,6 +1195,7 @@ def _repr_dict(obj):
 
 @register(dict)
 def save_module_dict(pickler, obj):
+    import __main__ as _main_module
     if is_dill(pickler, child=False) and obj == pickler._main.__dict__ and \
             not (pickler._session and pickler._first_pass):
         logger.trace(pickler, "D1: %s", _repr_dict(obj)) # obj

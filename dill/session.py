@@ -23,7 +23,7 @@ import warnings
 from dill import _dill, Pickler, Unpickler
 from ._dill import (
     BuiltinMethodType, FunctionType, MethodType, ModuleType, TypeType,
-    _import_module, _is_builtin_module, _is_imported_module, _main_module,
+    _import_module, _is_builtin_module, _is_imported_module,
     _reverse_typemap, __builtin__,
 )
 
@@ -233,6 +233,7 @@ def dump_module(
     protocol = settings['protocol']
     main = module
     if main is None:
+        import __main__ as _main_module
         main = _main_module
     elif isinstance(main, str):
         main = _import_module(main)
@@ -501,6 +502,7 @@ def load_module(
             pass
     assert loaded is main
     _restore_modules(unpickler, main)
+    import __main__ as _main_module
     if main is _main_module or main is module:
         return None
     else:
